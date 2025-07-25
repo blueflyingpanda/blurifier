@@ -1,0 +1,15 @@
+Django>=5.2
+django-ninja
+psycopg2-binary
+celery[redis]
+redis
+django-celery-beat
+django-redis
+uvicorn
+gunicorn
+jinja2
+pytest
+pytest-django
+python-dotenv
+better-profanity
+flower

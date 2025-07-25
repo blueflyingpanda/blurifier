@@ -1,0 +1,81 @@
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && gunicorn blurifier.asgi:application -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/static  # shared static files volume
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+
+  db:
+    image: postgres:16
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # optional: web UI
+
+  celery:
+    build: .
+    command: celery -A blurifier worker -l info
+    depends_on:
+      - rabbitmq
+      - redis
+      - web
+
+  celery_beat:
+    build: .
+    command: celery -A blurifier beat -l info
+    depends_on:
+      - rabbitmq
+      - redis
+      - web
+
+  flower:
+    build: .
+    command: celery -A blurifier flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - rabbitmq
+
+volumes:
+  postgres_data:
+  static_volume:
