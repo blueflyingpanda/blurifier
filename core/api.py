@@ -1,14 +1,13 @@
 import logging
 
 from django.shortcuts import get_object_or_404
-from ninja import Router
+from ninja import Router, Schema
+
 from .models import TextSubmission
 from .tasks import process_text
 
 logger = logging.getLogger(__name__)
 router = Router()
-
-from ninja import Schema
 
 
 class SubmitTextSchema(Schema):

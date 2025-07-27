@@ -1,6 +1,6 @@
 from fakeredis import FakeConnection
 
-from .settings import *
+from .settings import *  # noqa: F403
 
 from threading import Thread
 from fakeredis import TcpFakeServer
