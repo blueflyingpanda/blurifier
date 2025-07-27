@@ -10,9 +10,9 @@ def test_submit_text(client):
     )
     assert response.status_code == 200
     data = response.json()
-    assert 'id' in data
+    assert 'text_id' in data
 
-    submission = TextSubmission.objects.get(id=data['id'])
+    submission = TextSubmission.objects.get(text_hash=data['text_id'])
     assert submission.original_text == 'this is a damn test'
     assert submission.processed_text == 'this is a **** test'
 
@@ -24,7 +24,7 @@ def test_get_result(client):
         processed_text='f*** s***',
     )
 
-    url = f'/api/result/{submission.id}/'
+    url = f'/api/result/{submission.text_hash}/'
     response = client.get(url)
     assert response.status_code == 200
     data = response.json()

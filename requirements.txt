@@ -5,6 +5,7 @@ celery[redis]
 redis
 django-celery-beat
 django-redis
+django-debug-toolbar
 fakeredis
 uvicorn
 gunicorn

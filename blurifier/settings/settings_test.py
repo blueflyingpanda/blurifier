@@ -28,3 +28,25 @@ CELERY_TASK_ALWAYS_EAGER = (
 CELERY_TASK_EAGER_PROPAGATES = True  # makes task exceptions propagate up to your calling code instead of being stored in the result
 CELERY_BROKER_URL = 'memory://'
 CELERY_RESULT_BACKEND = 'cache+memory://'  # instead of redis, use memory for results
+
+DEBUG = False
+
+try:
+    INSTALLED_APPS.remove('debug_toolbar')  # noqa: F405
+    MIDDLEWARE.remove('debug_toolbar.middleware.DebugToolbarMiddleware')  # noqa: F405
+except ValueError:
+    pass  # debug_toolbar not in list
+
+# Disable logging during tests to reduce noise
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'null': {
+            'class': 'logging.NullHandler',
+        },
+    },
+    'root': {
+        'handlers': ['null'],
+    },
+}
