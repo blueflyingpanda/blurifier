@@ -9,8 +9,10 @@ from .models import TextSubmission
 logger = logging.getLogger(__name__)
 CACHE_TTL = 86400  # 1 day in seconds
 
+
 def blur_text(text: str) -> str:
     return profanity.censor(text)
+
 
 @shared_task
 def process_text(submission_id):
@@ -28,6 +30,7 @@ def process_text(submission_id):
     obj.processed = True
     obj.save()
     return obj.id
+
 
 @shared_task
 def process_unprocessed_texts():

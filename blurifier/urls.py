@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path
@@ -21,13 +22,15 @@ from ninja import NinjaAPI
 from core.api import router as core_router
 
 api = NinjaAPI()
-api.add_router("/", core_router)
+api.add_router('/', core_router)
+
 
 def ping(request):
-    return JsonResponse({"ping": "pong"})
+    return JsonResponse({'ping': 'pong'})
+
 
 urlpatterns = [
-    path("ping/", ping),
-    path("admin/", admin.site.urls),
-    path("api/", api.urls),
+    path('ping/', ping),
+    path('admin/', admin.site.urls),
+    path('api/', api.urls),
 ]

@@ -1,5 +1,6 @@
 import logging
 
+from django.shortcuts import get_object_or_404
 from ninja import Router
 from .models import TextSubmission
 from .tasks import process_text
@@ -9,12 +10,13 @@ router = Router()
 
 from ninja import Schema
 
+
 class SubmitTextSchema(Schema):
     text: str
 
-@router.post("/submit/")
+
+@router.post('/submit/')
 def submit_text(request, payload: SubmitTextSchema):
-    # TODO: use single quotes for strings
     # TODO: figure out where are logs
     obj = TextSubmission.objects.create(original_text=payload.text)
 
@@ -26,13 +28,12 @@ def submit_text(request, payload: SubmitTextSchema):
     return {'id': obj.id}
 
 
-
-@router.get("/result/{submission_id}/")
+@router.get('/result/{submission_id}/')
 def get_result(request, submission_id: int):
-    # TODO: validate submission_id and add status model for tasks
-    obj = TextSubmission.objects.get(id=submission_id)
+    # TODO: add status model for tasks
+    obj = get_object_or_404(TextSubmission, id=submission_id)
     return {
-        "original": obj.original_text,
-        "processed": obj.processed_text,
-        "processed_dt": obj.updated_at,
+        'original': obj.original_text,
+        'processed': obj.processed_text,
+        'processed_dt': obj.updated_at,
     }
