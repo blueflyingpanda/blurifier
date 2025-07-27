@@ -16,9 +16,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-load_dotenv(BASE_DIR / ".env")
+if os.path.exists(BASE_DIR / ".env.dev"):
+    load_dotenv('.env.dev')  # For local development
+else:
+    load_dotenv(BASE_DIR / ".env")  # For containers
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -108,14 +111,6 @@ DATABASES = {
 }
 
 
-# Fallback for local dev (optional)
-if DEBUG and os.environ.get("USE_SQLITE"):
-    DATABASES["default"] = {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -153,13 +148,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Celery config
 
-CELERY_BROKER_URL = "amqp://guest:guest@rabbitmq:5672//"
-CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_BROKER_URL = f"amqp://{os.environ["RABBITMQ_USER"]}:{os.environ["RABBITMQ_PASS"]}@{os.environ["RABBITMQ_HOST"]}:{os.environ["RABBITMQ_PORT"]}//"
+CELERY_RESULT_BACKEND = f"redis://{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}/0"
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
+        "LOCATION": f"redis://{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}/1",
     }
 }
 

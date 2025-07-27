@@ -1,8 +1,6 @@
 import pytest
 from core.models import TextSubmission
 
-# TODO run tests in docker containers
-
 @pytest.mark.django_db
 def test_submit_text(client):
     url = "/api/submit/"
@@ -13,7 +11,7 @@ def test_submit_text(client):
 
     submission = TextSubmission.objects.get(id=data["id"])
     assert submission.original_text == "this is a damn test"
-    assert submission.processed_text is None
+    assert submission.processed_text == "this is a **** test"
 
 @pytest.mark.django_db
 def test_get_result(client):

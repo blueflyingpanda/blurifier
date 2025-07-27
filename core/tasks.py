@@ -33,12 +33,17 @@ def process_text(submission_id):
 def process_unprocessed_texts():
     objs = TextSubmission.objects.filter(processed_text__isnull=True)
     total = objs.count()
-    logger.info(f'Starting to reprocess {total} texts')
+
+    logger.info('Starting to reprocess %s texts', total)
+
     processed_count = 0
+
     for obj in objs:
         obj.processed_text = blur_text(obj.original_text)
         obj.processed = True
         obj.save()
+
         processed_count += 1
-        logger.info(f'Processed TextSubmission id={obj.id}')
-    logger.info(f'Finished reprocessing texts, total processed: {processed_count}')
+        logger.info('Processed TextSubmission id=%s', obj.id)
+
+    logger.info('Finished reprocessing texts, total processed: %s', processed_count)
