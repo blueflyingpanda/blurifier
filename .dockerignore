@@ -21,3 +21,9 @@ coverage.xml
 *.log
 .vscode/
 .idea/
+.venv
+
+.DS_Store
+.pre-commit-config.yaml
+.ruff_cache
+*.egg-info

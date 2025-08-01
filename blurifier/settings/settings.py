@@ -166,7 +166,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'custom': {
-            'format': '[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s',
+            'format': '[%(asctime)s] [%(process)d] [%(name)s] [%(levelname)s] %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     },
