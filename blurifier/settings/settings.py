@@ -1,15 +1,66 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from pydantic.types import SecretStr
+
+
+# TODO: Grafana/Prometheus
+# TODO: Elasticsearch/Logstash/Kibana
+# TODO: Sentry
+# TODO: graphQL
+# TODO: Hugging Face/Langchain
+# TODO: ai agents? mcp?
+# TODO: protobuf/grpc api
+
+
+class AppSettings(BaseSettings):
+    # Database settings
+    db_host: str
+    db_port: int
+    db_name: str
+    db_user: str
+    db_pass: SecretStr
+
+    # Redis settings
+    redis_host: str
+    redis_port: int
+
+    # RabbitMQ settings
+    rabbitmq_user: str
+    rabbitmq_pass: SecretStr
+    rabbitmq_host: str
+    rabbitmq_port: int
+
+    @property
+    def celery_broker_url(self) -> str:
+        return f'amqp://{self.rabbitmq_user}:{self.rabbitmq_pass.get_secret_value()}@{self.rabbitmq_host}:{self.rabbitmq_port}//'
+
+    @property
+    def celery_result_backend(self) -> str:
+        return f'redis://{self.redis_host}:{self.redis_port}/0'
+
+    @property
+    def cache_location(self) -> str:
+        return f'redis://{self.redis_host}:{self.redis_port}/1'
+
+    class Config:
+        case_sensitive = False
+        env_file = '.env'
+        extra = 'ignore'
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# Load environment variables based on file existence
 if os.path.exists(BASE_DIR / '.env.dev'):
-    load_dotenv('.env.dev')  # For local development
+    env_file = BASE_DIR / '.env.dev'  # For local development
 else:
-    load_dotenv(BASE_DIR / '.env')  # For containers
+    env_file = BASE_DIR / '.env'  # For containers
+
+# Initialize settings
+settings = AppSettings(_env_file=env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -22,9 +73,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -83,25 +132,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blurifier.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASS'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ['DB_PORT'],
+        'NAME': settings.db_name,
+        'USER': settings.db_user,
+        'PASSWORD': settings.db_pass.get_secret_value(),
+        'HOST': settings.db_host,
+        'PORT': settings.db_port,
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'
@@ -111,39 +156,25 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 # Celery config
-
-CELERY_BROKER_URL = f'amqp://{os.environ["RABBITMQ_USER"]}:{os.environ["RABBITMQ_PASS"]}@{os.environ["RABBITMQ_HOST"]}:{os.environ["RABBITMQ_PORT"]}//'
-
-CELERY_RESULT_BACKEND = (
-    f'redis://{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}/0'
-)
-
+CELERY_BROKER_URL = settings.celery_broker_url
+CELERY_RESULT_BACKEND = settings.celery_result_backend
 CELERY_TASK_TIME_LIMIT = 28 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 2 * 60
 
@@ -157,7 +188,7 @@ CELERY_BEAT_SCHEDULE = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}/1',
+        'LOCATION': settings.cache_location,
     }
 }
 
