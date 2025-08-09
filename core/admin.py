@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TextSubmission
+from core.models import TextSubmission
 
 
 @admin.register(TextSubmission)

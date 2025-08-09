@@ -12,6 +12,7 @@ services:
       - db
       - redis
       - rabbitmq
+      - elasticsearch
 
   nginx:
     image: nginx:latest
@@ -49,6 +50,27 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  elasticsearch:
+    image: elasticsearch:9.1.0
+    environment:
+      - discovery.type=single-node  # Skips the cluster discovery process
+      - xpack.security.enabled=false  # Disable security for development
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"  # Adjust memory settings
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: kibana:9.1.0
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    depends_on:
+      - elasticsearch
+
   celery:
     build: .
     command: uv run celery -A blurifier worker -l info
@@ -58,6 +80,7 @@ services:
       - rabbitmq
       - redis
       - web
+      - elasticsearch
 
   celery_beat:
     build: .
@@ -71,7 +94,7 @@ services:
 
   flower:
     build: .
-    command:  uv run celery -A blurifier flower --port=5555
+    command: uv run celery -A blurifier flower --port=5555
     ports:
       - "5555:5555"
     env_file:
@@ -83,3 +106,4 @@ services:
 volumes:
   postgres_data:
   static_volume:
+  elasticsearch_data:

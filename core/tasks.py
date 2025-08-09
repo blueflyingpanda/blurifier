@@ -1,9 +1,12 @@
 import logging
+from datetime import datetime, UTC
 
+from asgiref.sync import async_to_sync
 from better_profanity import profanity
 from celery import shared_task
 
-from .models import TextSubmission
+from core.elk import es_service
+from core.models import TextSubmission
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +46,47 @@ def process_unprocessed_texts():
 
     TextSubmission.objects.bulk_update(objs, ['processed_text'])
 
-    processed_ids = [obj.id for obj in objs]
     logger.info(
-        'Finished processing texts, total processed: %s, IDs: %s', total, processed_ids
+        'Finished processing texts, total processed: %s, IDs: %s',
+        len(objs),
+        [obj.id for obj in objs],
+    )
+
+
+def index_document_sync(text_hash, original_text, processed_text=None) -> bool:
+    return async_to_sync(es_service.index_document)(
+        text_hash, original_text, processed_text
+    )
+
+
+@shared_task
+def index_texts():
+    texts_to_index = list(
+        TextSubmission.objects.filter(
+            processed_text__isnull=False,
+            indexed_at__isnull=True,
+        )
+    )
+
+    updated_texts = []
+    current_time = datetime.now(UTC)
+
+    for text in texts_to_index:
+        success = index_document_sync(
+            text_hash=text.text_hash,
+            original_text=text.original_text,
+            processed_text=text.processed_text,
+        )
+        if success:
+            text.indexed_at = current_time
+            text.updated_at = current_time
+            updated_texts.append(text)
+
+    if updated_texts:
+        TextSubmission.objects.bulk_update(updated_texts, ['indexed_at', 'updated_at'])
+
+    logger.info(
+        'Finished indexing texts, total indexed: %s, IDs: %s',
+        len(updated_texts),
+        [obj.id for obj in updated_texts],
     )

@@ -1,15 +1,24 @@
 import logging
-from datetime import datetime
 from enum import StrEnum
 from hashlib import sha256
 
 from celery.result import AsyncResult
 from django.core.cache import cache
 from django.shortcuts import aget_object_or_404
-from ninja import Router, Schema
+from ninja import Router
+from ninja.errors import HttpError
+from ninja.pagination import paginate, LimitOffsetPagination
 
-from .models import TextSubmission
-from .tasks import process_text
+from core.elk import es_service
+from core.models import TextSubmission
+from core.schemas import (
+    SearchResponseSchema,
+    SubmitResponseSchema,
+    SubmitTextSchema,
+    ResultResponseSchema,
+    ErrorResponseSchema,
+)
+from core.tasks import process_text
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -20,26 +29,6 @@ CACHE_TTL = 3600  # 1 hour in seconds
 class TaskStatus(StrEnum):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
-
-
-class SubmitTextSchema(Schema):
-    text: str
-
-
-class SubmitResponseSchema(Schema):
-    text_id: str
-
-
-class ResultResponseSchema(Schema):
-    status: str
-    original: str
-    processed: str | None = None
-    processed_dt: datetime
-    detail: str = ''
-
-
-class ErrorResponseSchema(Schema):
-    detail: str
 
 
 @router.post('/submit/', response=SubmitResponseSchema)
@@ -86,3 +75,27 @@ async def get_result(request, text_hash: str):
         cache.set(cache_key, result_data, timeout=CACHE_TTL)
 
     return ResultResponseSchema(**result_data)
+
+
+@router.get(
+    '/search/',
+    response={
+        200: list[SearchResponseSchema],
+        400: ErrorResponseSchema,
+        404: ErrorResponseSchema,
+        500: ErrorResponseSchema,
+    },
+)
+@paginate(LimitOffsetPagination)
+async def search_texts(request, query: str):
+    created = await es_service.create_index()
+    if not created:
+        raise HttpError(500, 'Failed to create Elasticsearch index')
+
+    if not query.strip():
+        raise HttpError(400, 'Query parameter cannot be empty')
+
+    # probably better to paginate this at the Elasticsearch level but for learning purposes we will paginate here
+    results = await es_service.search_text(query)
+
+    return results

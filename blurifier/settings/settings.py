@@ -6,7 +6,6 @@ from pydantic.types import SecretStr
 
 
 # TODO: Grafana/Prometheus
-# TODO: Elasticsearch/Logstash/Kibana
 # TODO: Sentry
 # TODO: graphQL
 # TODO: Hugging Face/Langchain
@@ -32,6 +31,10 @@ class AppSettings(BaseSettings):
     rabbitmq_host: str
     rabbitmq_port: int
 
+    elasticsearch_host: str = 'elasticsearch'
+    elasticsearch_port: int = 9200
+    elasticsearch_index_name: str = 'text_submissions'
+
     @property
     def celery_broker_url(self) -> str:
         return f'amqp://{self.rabbitmq_user}:{self.rabbitmq_pass.get_secret_value()}@{self.rabbitmq_host}:{self.rabbitmq_port}//'
@@ -43,6 +46,10 @@ class AppSettings(BaseSettings):
     @property
     def cache_location(self) -> str:
         return f'redis://{self.redis_host}:{self.redis_port}/1'
+
+    @property
+    def elasticsearch_url(self) -> str:
+        return f'http://{self.elasticsearch_host}:{self.elasticsearch_port}'
 
     class Config:
         case_sensitive = False
@@ -182,7 +189,11 @@ CELERY_BEAT_SCHEDULE = {
     'process_unprocessed_texts': {
         'task': 'core.tasks.process_unprocessed_texts',
         'schedule': 120,
-    }
+    },
+    'index_texts': {
+        'task': 'core.tasks.index_texts',
+        'schedule': 300,
+    },
 }
 
 CACHES = {
@@ -222,3 +233,10 @@ INTERNAL_IPS = [
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
 }
+
+ELASTICSEARCH = {
+    'default': {'hosts': settings.elasticsearch_url},
+}
+ELASTICSEARCH_INDEX_NAME = 'text_submissions'
+
+NINJA_PAGINATION_MAX_LIMIT = 100
