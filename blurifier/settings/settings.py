@@ -190,9 +190,9 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'core.tasks.process_unprocessed_texts',
         'schedule': 120,
     },
-    'index_texts': {
-        'task': 'core.tasks.index_texts',
-        'schedule': 300,
+    'index_unindexed_texts': {
+        'task': 'core.tasks.index_unindexed_texts',
+        'schedule': 180,
     },
 }
 
@@ -217,9 +217,14 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'custom',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/django.log',
+            'formatter': 'custom',
+        },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'file'],
         'level': 'INFO',
     },
 }

@@ -15,6 +15,12 @@ def blur_text(text: str) -> str:
     return profanity.censor(text)
 
 
+def index_document(doc: TextSubmission) -> bool:
+    return async_to_sync(es_service.index_document)(
+        doc.text_hash, doc.original_text, doc.processed_text
+    )
+
+
 @shared_task
 def process_text(text_hash: str) -> str:
     # Get the unique submission by hash
@@ -29,6 +35,10 @@ def process_text(text_hash: str) -> str:
     result = blur_text(submission.original_text)
 
     submission.processed_text = result
+
+    if index_document(submission):
+        submission.indexed_at = datetime.now(UTC)
+
     submission.save()
 
     return result
@@ -53,14 +63,8 @@ def process_unprocessed_texts():
     )
 
 
-def index_document_sync(text_hash, original_text, processed_text=None) -> bool:
-    return async_to_sync(es_service.index_document)(
-        text_hash, original_text, processed_text
-    )
-
-
 @shared_task
-def index_texts():
+def index_unindexed_texts():
     texts_to_index = list(
         TextSubmission.objects.filter(
             processed_text__isnull=False,
@@ -72,12 +76,7 @@ def index_texts():
     current_time = datetime.now(UTC)
 
     for text in texts_to_index:
-        success = index_document_sync(
-            text_hash=text.text_hash,
-            original_text=text.original_text,
-            processed_text=text.processed_text,
-        )
-        if success:
+        if index_document(text):
             text.indexed_at = current_time
             text.updated_at = current_time
             updated_texts.append(text)

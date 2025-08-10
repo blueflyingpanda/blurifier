@@ -211,3 +211,5 @@ static
 
 # MacOS
 .DS_Store
+
+django.log*
