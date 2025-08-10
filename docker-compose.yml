@@ -87,7 +87,9 @@ services:
 
   celery:
     build: .
-    command: uv run celery -A blurifier worker -l info
+    command: sh -c "celery-prometheus-exporter --broker=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}// --addr=0.0.0.0:8888 & uv run celery -A blurifier worker -l info"
+    ports:
+      - "8888:8888"
     env_file:
       - .env
     depends_on:
@@ -116,6 +118,20 @@ services:
     depends_on:
       - redis
       - rabbitmq
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
 
 volumes:
   postgres_data:

@@ -17,6 +17,7 @@ urlpatterns = [
     path('ping/', ping),
     path('admin/', admin.site.urls),
     path('api/', api.urls),
+    path('', include('django_prometheus.urls')),
 ]
 
 if settings.DEBUG:

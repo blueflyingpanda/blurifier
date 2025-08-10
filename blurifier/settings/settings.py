@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings
 from pydantic.types import SecretStr
 
 
-# TODO: Grafana/Prometheus
 # TODO: Sentry
 # TODO: graphQL
 # TODO: Hugging Face/Langchain
@@ -91,10 +90,12 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'ninja',
     'django_celery_beat',
+    'django_prometheus',
     'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -103,6 +104,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'blurifier.urls'
@@ -143,7 +145,7 @@ WSGI_APPLICATION = 'blurifier.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': settings.db_name,
         'USER': settings.db_user,
         'PASSWORD': settings.db_pass.get_secret_value(),
@@ -185,6 +187,9 @@ CELERY_RESULT_BACKEND = settings.celery_result_backend
 CELERY_TASK_TIME_LIMIT = 28 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 2 * 60
 
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_SEND_SENT_EVENT = True
+
 CELERY_BEAT_SCHEDULE = {
     'process_unprocessed_texts': {
         'task': 'core.tasks.process_unprocessed_texts',
@@ -198,7 +203,7 @@ CELERY_BEAT_SCHEDULE = {
 
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
+        'BACKEND': 'django_prometheus.cache.backends.redis.RedisCache',
         'LOCATION': settings.cache_location,
     }
 }
