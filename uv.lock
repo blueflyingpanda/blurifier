@@ -139,10 +139,12 @@ source = { virtual = "." }
 dependencies = [
     { name = "better-profanity" },
     { name = "celery", extra = ["redis"] },
+    { name = "celery-prometheus-exporter" },
     { name = "django" },
     { name = "django-celery-beat" },
     { name = "django-debug-toolbar" },
     { name = "django-ninja" },
+    { name = "django-prometheus" },
     { name = "django-redis" },
     { name = "djangorestframework" },
     { name = "elasticsearch", extra = ["async"] },
@@ -171,10 +173,12 @@ dev = [
 requires-dist = [
     { name = "better-profanity", specifier = ">=0.7.0" },
     { name = "celery", extras = ["redis"], specifier = ">=5.5.3" },
+    { name = "celery-prometheus-exporter", specifier = ">=1.7.0" },
     { name = "django", specifier = ">=5.2" },
     { name = "django-celery-beat", specifier = ">=2.8.1" },
     { name = "django-debug-toolbar", specifier = ">=6.0.0" },
     { name = "django-ninja", specifier = ">=1.4.3" },
+    { name = "django-prometheus", specifier = ">=2.4.1" },
     { name = "django-redis", specifier = ">=6.0.0" },
     { name = "djangorestframework", specifier = ">=3.16.0" },
     { name = "elasticsearch", extras = ["async"], specifier = ">=9.1.0" },
@@ -219,6 +223,16 @@ wheels = [
 redis = [
     { name = "kombu", extra = ["redis"] },
 ]
+
+[[package]]
+name = "celery-prometheus-exporter"
+version = "1.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "celery" },
+    { name = "prometheus-client" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c5/3f/c7ae53ad33c736c48067730d184f27d58cbd0e60031f321d5787534751d7/celery-prometheus-exporter-1.7.0.tar.gz", hash = "sha256:8fc2d5909921c44f01c8c1b7d956d92e6966f2e14eec196bf60735e39a0e0991", size = 11369, upload-time = "2019-05-04T16:24:20.06Z" }
 
 [[package]]
 name = "certifi"
@@ -369,6 +383,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cd/1a/f0d051f54375cfd2310f803925993fdc4172e41e627d63ece48194b07892/django_ninja-1.4.3.tar.gz", hash = "sha256:e46d477ca60c228d2a5eb3cc912094928ea830d364501f966661eeada67cb038", size = 3709571, upload-time = "2025-06-04T15:11:13.408Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/08/ec/0cfa9b817f048cdec354354ae0569d7c0fd63907e5b1f927a7ee04a18635/django_ninja-1.4.3-py3-none-any.whl", hash = "sha256:f3204137a059437b95677049474220611f1cf9efedba9213556474b75168fa01", size = 2426185, upload-time = "2025-06-04T15:11:11.314Z" },
+]
+
+[[package]]
+name = "django-prometheus"
+version = "2.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "prometheus-client" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/98/f4/cb39ddd2a41e07a274c4e162c076e906ae232d63b66bbabdea0300878877/django_prometheus-2.4.1.tar.gz", hash = "sha256:073628243d2a6de6a8a8c20e5b512872dfb85d66e1b60b28bcf1eca0155dad95", size = 24464, upload-time = "2025-06-25T15:45:37.149Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/50/9c5e022fa92574e5d20606687f15a2aa255e10512a17d11a8216fa117f72/django_prometheus-2.4.1-py2.py3-none-any.whl", hash = "sha256:7fe5af7f7c9ad9cd8a429fe0f3f1bf651f0e244f77162147869eab7ec09cc5e7", size = 29541, upload-time = "2025-06-25T15:45:35.433Z" },
 ]
 
 [[package]]
